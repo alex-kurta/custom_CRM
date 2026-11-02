@@ -1,0 +1,128 @@
+# Sanitized copy of the production docker-compose.yml — placeholders only.
+# Copy to docker-compose.yml, fill CHANGE_ME values, then `docker compose up -d`.
+# Structure matches /var/www/espocrm/docker-compose.yml (EspoCRM 10.0.8, http mode).
+#
+# VOLUME NOTE: the custom/ and custom-client/ bind mounts below are what make
+# this repo's trees live. They ship with the standard EspoCRM compose file —
+# keep them.
+
+services:
+
+  espocrm-db:
+    image: mariadb:latest
+    container_name: espocrm-db
+    command: --max-allowed-packet=64MB
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: CHANGE_ME_ROOT_DB_PASSWORD
+      MARIADB_DATABASE: espocrm
+      MARIADB_USER: espocrm
+      MARIADB_PASSWORD: CHANGE_ME_ESPOCRM_DB_PASSWORD
+    volumes:
+      - ./data/mariadb/data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 20s
+      start_period: 10s
+      timeout: 10s
+      retries: 3
+    networks:
+      - espocrm-network
+
+  espocrm-nginx:
+    image: nginx:latest
+    container_name: espocrm-nginx
+    environment:
+      NGINX_HOST: CHANGE_ME_HOST_IP
+    volumes:
+      - ./data/espocrm/ephemeral/client:/var/www/html/client:ro
+      - ./data/espocrm/ephemeral/public:/var/www/html/public:ro
+      - ./data/espocrm/persistent/custom-client:/var/www/html/client/custom:ro
+      - ./data/nginx/conf.d/:/etc/nginx/templates
+      - ./data/nginx/espocrm.conf:/etc/nginx/espocrm.conf
+      - ./data/nginx/logs:/var/log/nginx
+    restart: always
+    depends_on:
+      espocrm:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    networks:
+      - espocrm-network
+
+  espocrm:
+    image: espocrm/espocrm:fpm
+    container_name: espocrm
+    environment:
+      ESPOCRM_DATABASE_HOST: espocrm-db
+      ESPOCRM_DATABASE_USER: espocrm
+      ESPOCRM_DATABASE_PASSWORD: CHANGE_ME_ESPOCRM_DB_PASSWORD
+      ESPOCRM_ADMIN_USERNAME: admin
+      ESPOCRM_ADMIN_PASSWORD: CHANGE_ME_ADMIN_PASSWORD
+      ESPOCRM_CONFIG_SITE_URL: "http://CHANGE_ME_HOST_IP"
+    restart: always
+    volumes:
+      - ./data/espocrm/persistent/data:/var/www/html/data
+      - ./data/espocrm/persistent/custom:/var/www/html/custom
+      - ./data/espocrm/persistent/custom-client:/var/www/html/client/custom
+      - ./data/espocrm/ephemeral/client:/var/www/html/client
+      - ./data/espocrm/ephemeral/public:/var/www/html/public
+    depends_on:
+      espocrm-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "bin/command", "app-check"]
+      start_period: 30s
+      interval: 60s
+      timeout: 20s
+      retries: 3
+    networks:
+      - espocrm-network
+
+  espocrm-daemon:
+    image: espocrm/espocrm:fpm
+    container_name: espocrm-daemon
+    volumes_from:
+      - espocrm
+    restart: always
+    entrypoint: docker-daemon.sh
+    depends_on:
+      espocrm:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "bin/command", "app-check"]
+      start_period: 30s
+      interval: 180s
+      timeout: 20s
+      retries: 3
+    networks:
+      - espocrm-network
+
+  espocrm-websocket:
+    image: espocrm/espocrm:fpm
+    container_name: espocrm-websocket
+    environment:
+      ESPOCRM_CONFIG_USE_WEB_SOCKET: "true"
+      ESPOCRM_CONFIG_WEB_SOCKET_ZERO_M_Q_SUBSCRIBER_DSN: "tcp://*:7777"
+      ESPOCRM_CONFIG_WEB_SOCKET_ZERO_M_Q_SUBMISSION_DSN: "tcp://espocrm-websocket:7777"
+    volumes_from:
+      - espocrm
+    restart: always
+    entrypoint: docker-daemon.sh
+    depends_on:
+      espocrm:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "bin/command", "app-check"]
+      start_period: 30s
+      interval: 180s
+      timeout: 20s
+      retries: 3
+    ports:
+      - "8080:8080"
+    networks:
+      - espocrm-network
+
+networks:
+  espocrm-network:
+    driver: bridge

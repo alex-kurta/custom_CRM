@@ -1,0 +1,31 @@
+{
+    "relationshipPanels": {
+        "salesOrders": {
+            "layout": null,
+            "selectPrimaryFilterName": null
+        },
+        "cSalesOrders": {
+            "layout": "list",
+            "selectPrimaryFilterName": null,
+            "view": "custom:views/account/panels/c-sales-orders",
+            "orderBy": "fishbowlNum",
+            "orderDirection": "desc"
+        },
+        "cPastDue": {
+            "view": "custom:views/account/panels/past-due",
+            "layout": null,
+            "selectPrimaryFilterName": null
+        }
+    },
+    "listColumns": {
+        "cPastDue": [],
+        "cOutstandingOrders": [],
+        "assignedUser": [],
+        "cCategory": [],
+        "cLastContacted": [],
+        "cLastContactedBy": [],
+        "cDaysOverdue": [],
+        "cTotalOrderAmount": []
+    },
+    "listView": "custom:views/account/list"
+}

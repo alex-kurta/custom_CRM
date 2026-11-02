@@ -1,0 +1,168 @@
+{
+    "fields": {
+        "cFishbowlId": {
+            "type": "varchar",
+            "isCustom": true
+        },
+        "cFishbowlLastModified": {
+            "notNull": false,
+            "type": "datetime",
+            "isCustom": true
+        },
+        "cOrderCount": {
+            "type": "int",
+            "isCustom": true
+        },
+        "cOrderRank": {
+            "type": "int",
+            "isCustom": true
+        },
+        "cLastContacted": {
+            "notNull": false,
+            "type": "datetime",
+            "isCustom": true
+        },
+        "cLastContactedReason": {
+            "type": "text",
+            "isCustom": true
+        },
+        "cCapitalOsint": {
+            "type": "currency",
+            "isCustom": true
+        },
+        "cTopProduct": {
+            "type": "varchar",
+            "isCustom": true
+        },
+        "cAvgOrdersPerYear": {
+            "notNull": false,
+            "type": "float",
+            "isCustom": true
+        },
+        "cCategory": {
+            "type": "enum",
+            "options": [
+                "Distributor",
+                "University",
+                "Small Biotech",
+                "Government",
+                "CRO",
+                "Cancer Research",
+                "Stem Cell",
+                "Neuroscience",
+                "Pharmaceutical",
+                "Molecular Genomics",
+                "Hospital",
+                "Other"
+            ],
+            "maxLength": 100,
+            "isCustom": true
+        },
+        "cFollowUpDate": {
+            "notNull": false,
+            "type": "date",
+            "isCustom": true
+        },
+        "cDoNotContact": {
+            "notNull": true,
+            "type": "bool",
+            "isCustom": true
+        },
+        "cBankrupt": {
+            "notNull": true,
+            "type": "bool",
+            "isCustom": true
+        },
+        "cDoNotSell": {
+            "notNull": true,
+            "type": "bool",
+            "isCustom": true
+        },
+        "cOutstandingOrders": {
+            "type": "int",
+            "isCustom": true
+        },
+        "cLastContactedBy": {
+            "type": "link",
+            "isCustom": true
+        },
+        "cPastDue": {
+            "type": "bool",
+            "isCustom": true
+        },
+        "cPrePay": {
+            "type": "bool",
+            "isCustom": true
+        },
+        "cComments": {
+            "type": "text",
+            "isCustom": true,
+            "rows": 4
+        },
+        "cPastDueAmount": {
+            "type": "currency",
+            "isCustom": true
+        },
+        "cPastDueData": {
+            "type": "text",
+            "isCustom": true
+        },
+        "cDaysOverdue": {
+            "type": "int",
+            "isCustom": true,
+            "default": 0
+        },
+        "cLastOrderedDate": {
+            "type": "date",
+            "isCustom": true
+        },
+        "cTotalOrderAmount": {
+            "type": "currency",
+            "isCustom": true
+        },
+        "cLastReminderSent": {
+            "type": "datetime",
+            "readOnly": true
+        }
+    },
+    "attributeLabels": {
+        "cPastDue": "Past Due",
+        "cPastDueAmount": "Past Due Amount",
+        "cPastDueData": "Past Due Data",
+        "cDoNotContact": "Do Not Contact",
+        "cBankrupt": "Bankrupt",
+        "cDoNotSell": "Do Not Sell",
+        "cOrderCount": "Order Count",
+        "cOrderRank": "Order Rank",
+        "cLastContacted": "Last Contacted",
+        "cLastContactedReason": "Last Contacted Reason",
+        "cCapitalOsint": "Capital (OSINT)",
+        "cTopProduct": "Top Product",
+        "cAvgOrdersPerYear": "Avg Orders/Year",
+        "cCategory": "Category",
+        "cFollowUpDate": "Follow-Up Date",
+        "cOutstandingOrders": "Outstanding Orders",
+        "cFishbowlId": "Fishbowl ID",
+        "cFishbowlLastModified": "Fishbowl Last Modified",
+        "cDaysOverdue": "Days Overdue",
+        "cLastOrderedDate": "Last Ordered",
+        "cTotalOrderAmount": "Total Order Amount",
+        "cPrePay": "Pre-Pay",
+        "cComments": "Comments"
+    },
+    "links": {
+        "cSalesOrders": {
+            "type": "hasMany",
+            "foreign": "account",
+            "entity": "CSalesOrder",
+            "audited": false,
+            "isCustom": true
+        }
+    },
+    "attributeDefs": {
+        "cLastReminderSent": {
+            "type": "datetime",
+            "readOnly": true
+        }
+    }
+}

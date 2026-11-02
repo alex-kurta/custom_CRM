@@ -1,0 +1,14 @@
+{
+    "scopeNames": {
+        "CSalesOrder": "Sales Order",
+        "CSalesOrderItem": "CSalesOrderItem",
+        "Opportunity": "Opportunity",
+        "Account": "Customer"
+    },
+    "scopeNamesPlural": {
+        "CSalesOrder": "Sales Orders",
+        "CSalesOrderItem": "CSalesOrderItems",
+        "Opportunity": "Opportunitys",
+        "Account": "Customers"
+    }
+}

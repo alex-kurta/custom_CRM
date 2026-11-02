@@ -1,0 +1,22 @@
+[
+    {
+        "name": "fishbowlNum",
+        "width": 12,
+        "label": ""
+    },
+    {
+        "name": "orderDate",
+        "width": 15,
+        "hidden": true
+    },
+    {
+        "name": "status",
+        "width": 12,
+        "hidden": true
+    },
+    {
+        "name": "itemSummary",
+        "width": 50,
+        "hidden": true
+    }
+]

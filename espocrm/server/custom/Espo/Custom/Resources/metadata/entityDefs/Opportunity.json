@@ -1,0 +1,8 @@
+{
+    "fields": {
+        "cFishbowlId": {
+            "type": "varchar",
+            "isCustom": true
+        }
+    }
+}

@@ -1,0 +1,23 @@
+[
+    {
+        "name": "productNum",
+        "width": 20
+    },
+    {
+        "name": "qtyOrdered",
+        "width": 10
+    },
+    {
+        "name": "qtyFulfilled",
+        "width": 10
+    },
+    {
+        "name": "totalPrice",
+        "width": 12
+    },
+    {
+        "name": "name",
+        "link": true,
+        "width": 20
+    }
+]

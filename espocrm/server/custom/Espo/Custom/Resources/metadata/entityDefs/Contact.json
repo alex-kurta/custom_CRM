@@ -1,0 +1,13 @@
+{
+    "fields": {
+        "cFishbowlId": {
+            "type": "varchar",
+            "isCustom": true
+        },
+        "cDoNotContact": {
+            "notNull": true,
+            "type": "bool",
+            "isCustom": true
+        }
+    }
+}

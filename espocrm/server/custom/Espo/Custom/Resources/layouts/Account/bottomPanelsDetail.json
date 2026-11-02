@@ -1,0 +1,17 @@
+{
+    "_tabBreak_1": {
+        "index": 0,
+        "tabBreak": true,
+        "tabLabel": "Sales Orders"
+    },
+    "cSalesOrders": {
+        "index": 1,
+        "create": false,
+        "select": false,
+        "pageSize": 200,
+        "label": false,
+        "showHeader": false,
+        "view": "custom:views/account/panels/c-sales-orders",
+        "rowActionsView": false
+    }
+}

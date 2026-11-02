@@ -1,0 +1,40 @@
+{
+  "fields": {
+    "cFishbowlId": "Fishbowl ID",
+    "cFishbowlLastModified": "Fishbowl Last Modified",
+    "cOrderCount": "Order Count",
+    "cOrderRank": "Order Rank",
+    "cLastContacted": "Last Contacted",
+    "cLastContactedReason": "Last Contacted Reason",
+    "cCapitalOsint": "Capital",
+    "cCapitalOsintCurrency": "Capital (OSINT) (Currency)",
+    "cCapitalOsintConverted": "Capital (OSINT) (Converted)",
+    "cTopProduct": "Most Ordered Product",
+    "cAvgOrdersPerYear": "Avg Orders/Year",
+    "cCategory": "Category",
+    "cFollowUpDate": "Follow-up Date",
+    "cDoNotContact": "Do Not Contact",
+    "cBankrupt": "Bankruptcy",
+    "cDoNotSell": "Do Not Sell",
+    "cOutstandingOrders": "Outstanding Orders",
+    "cLastContactedBy": "Last Contacted By",
+    "cPastDue": "Past Due",
+    "cPastDueAmount": "Past Due Amount",
+    "cPastDueAmountCurrency": "Past Due Amount (Currency)",
+    "cPastDueAmountConverted": "Past Due Amount (Converted)",
+    "cPastDueData": "Past Due Data",
+    "cSalesOrders": "Sales Orders",
+    "cDaysOverdue": "Days Overdue",
+    "cLastOrderedDate": "Last Ordered",
+    "cTotalOrderAmount": "Total Order Amount",
+    "cLastReminderSent": "Last Reminder Sent",
+    "cPrePay": "Pre-Pay",
+    "cComments": "Comments"
+  },
+  "links": {
+    "cSalesOrders": "Sales Orders"
+  },
+  "labels": {
+    "Create Account": "Create Customer"
+  }
+}

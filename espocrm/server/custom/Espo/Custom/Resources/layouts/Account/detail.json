@@ -1,0 +1,124 @@
+[
+    {
+        "label": "Overview",
+        "rows": [
+            [
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "website"
+                }
+            ],
+            [
+                {
+                    "name": "emailAddress"
+                },
+                {
+                    "name": "phoneNumber"
+                }
+            ],
+            [
+                {
+                    "name": "billingAddress"
+                },
+                {
+                    "name": "shippingAddress"
+                }
+            ],
+            [
+                {
+                    "name": "assignedUser"
+                },
+                {
+                    "name": "cCategory"
+                }
+            ],
+            [
+                {
+                    "name": "cComments",
+                    "fullWidth": true
+                }
+            ]
+        ]
+    },
+    {
+        "label": "Sales Metrics",
+        "rows": [
+            [
+                {
+                    "name": "cOrderCount"
+                },
+                {
+                    "name": "cOrderRank"
+                }
+            ],
+            [
+                {
+                    "name": "cTopProduct"
+                },
+                {
+                    "name": "cAvgOrdersPerYear"
+                }
+            ],
+            [
+                {
+                    "name": "cOutstandingOrders"
+                },
+                {
+                    "name": "cCapitalOsint"
+                }
+            ]
+        ]
+    },
+    {
+        "label": "Activity & Flags",
+        "rows": [
+            [
+                {
+                    "name": "cLastContacted"
+                },
+                {
+                    "name": "cLastContactedBy"
+                }
+            ],
+            [
+                {
+                    "name": "cLastContactedReason"
+                },
+                {
+                    "name": "cDoNotContact"
+                }
+            ],
+            [
+                {
+                    "name": "cPrePay"
+                },
+                {
+                    "name": "cPastDue"
+                }
+            ],
+            [
+                {
+                    "name": "cDoNotSell"
+                },
+                {
+                    "name": "cBankrupt"
+                }
+            ]
+        ]
+    },
+    {
+        "label": "Past Due",
+        "rows": [
+            [
+                {
+                    "name": "cPastDueAmount"
+                },
+                {
+                    "name": "cDaysOverdue"
+                }
+            ]
+        ]
+    }
+]

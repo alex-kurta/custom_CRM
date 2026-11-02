@@ -1,0 +1,13 @@
+[
+    {"name": "name", "link": true, "width": 25},
+    {"name": "cCategory", "width": 15},
+    {"name": "cLastOrderedDate", "width": 15},
+    {"name": "cAvgOrdersPerYear", "width": 15},
+    {"name": "cLastContacted", "width": 15},
+    {"name": "cTotalOrderAmount", "hidden": true, "width": 20},
+    {"name": "cOutstandingOrders", "hidden": true},
+    {"name": "assignedUser", "hidden": true},
+    {"name": "cLastContactedBy", "hidden": true},
+    {"name": "cPastDue", "hidden": true},
+    {"name": "cDaysOverdue", "hidden": true}
+]

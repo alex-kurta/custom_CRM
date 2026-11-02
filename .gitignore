@@ -1,0 +1,41 @@
+# Secrets — NEVER commit
+.env
+.env.*
+!.env.example
+AGENTS.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Logs & runtime data
+logs/
+data/*.db
+data/*.json
+!data/.gitkeep
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Opencode cache
+.opencode/
+
+# Local reference files not intended for the remote repo
+/past-due-highlight.js
+/list-layout.json
+/espo-orange-colors.txt
+/*.xlsx

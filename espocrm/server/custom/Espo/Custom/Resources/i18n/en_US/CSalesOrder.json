@@ -1,0 +1,22 @@
+{
+    "fields": {
+        "fishbowlId": "Fishbowl ID",
+        "fishbowlNum": "",
+        "customerId": "Fishbowl Customer ID",
+        "amount": "Total",
+        "amountCurrency": "Total (Currency)",
+        "amountConverted": "Total (Converted)",
+        "status": "Status",
+        "orderDate": "Order Date",
+        "account": "Customer",
+        "salesOrderItems": "Sales Order Items",
+        "itemSummary": "Items Summary"
+    },
+    "links": {
+        "account": "Customer",
+        "salesOrderItems": "Sales Order Items"
+    },
+    "labels": {
+        "Create CSalesOrder": "Create Sales Order"
+    }
+}

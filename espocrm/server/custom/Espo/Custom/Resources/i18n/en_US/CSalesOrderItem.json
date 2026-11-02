@@ -1,0 +1,19 @@
+{
+    "fields": {
+        "fishbowlId": "Fishbowl ID",
+        "fishbowlSoId": "Fishbowl SO ID",
+        "productNum": "Product Number",
+        "qtyOrdered": "Qty Ordered",
+        "qtyFulfilled": "Qty Fulfilled",
+        "totalPrice": "Total Price",
+        "totalPriceCurrency": "Total Price (Currency)",
+        "totalPriceConverted": "Total Price (Converted)",
+        "salesOrder": "Sales Order"
+    },
+    "links": {
+        "salesOrder": "Sales Order"
+    },
+    "labels": {
+        "Create CSalesOrderItem": "Create CSalesOrderItem"
+    }
+}

@@ -1,0 +1,14 @@
+--- a/application/Espo/Core/Utils/ClientManager.php	2026-11-02 22:10:57.414838342 +0000
++++ b/application/Espo/Core/Utils/ClientManager.php	2026-11-02 22:10:57.417838361 +0000
+@@ -231,6 +231,11 @@
+             );
+         }
+ 
++        $scriptsHtml .= '<script src="' . $this->basePath . 'client/custom/account-ui.js?r=' . $appTimestamp . '"></script>';
++        $scriptsHtml .= '<script src="' . $this->basePath . 'client/custom/account-sort.js?r=' . $appTimestamp . '"></script>';
++        $scriptsHtml .= '<script src="' . $this->basePath . 'client/custom/account-row-clicks.js?r=' . $appTimestamp . '"></script>';
++        $scriptsHtml .= '<script src="' . $this->basePath . 'client/custom/past-due-highlight.js?r=' . $appTimestamp . '"></script>';
++
+         $additionalStyleSheetsHtml = implode('',
+             array_map(fn ($file) => $this->getCssItemHtml($file, $appTimestamp), $cssFileList)
+         );

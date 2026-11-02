@@ -1,0 +1,35 @@
+[
+    {
+        "label": "Overview",
+        "rows": [
+            [
+                {
+                    "name": "fishbowlNum"
+                },
+                {
+                    "name": "orderDate"
+                }
+            ],
+            [
+                {
+                    "name": "account"
+                },
+                {
+                    "name": "status"
+                }
+            ],
+            [
+                {
+                    "name": "itemSummary",
+                    "fullWidth": true
+                }
+            ],
+            [
+                {
+                    "name": "description",
+                    "fullWidth": true
+                }
+            ]
+        ]
+    }
+]

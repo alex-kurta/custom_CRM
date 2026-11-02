@@ -1,0 +1,5 @@
+# Daily follow-up reminder emails (8 AM server time).
+# Update the repo path below before installing if this checkout is not at
+# /path/to/project.
+# Install with:  crontab espocrm/cron/crontab.txt
+0 8 * * * cd /path/to/project && /usr/bin/python3 -m src.followup_reminders >> logs/followup-reminders.log 2>&1
