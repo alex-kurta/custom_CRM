@@ -21,6 +21,8 @@ espocrm/
   scripts/                repo -> live deploy and live -> repo export
 ```
 
+For EspoCRM UI and metadata changes, the source of truth is the repo copy under `espocrm/`. Do not keep ad hoc working copies in `/path/to/project`; deploy from the repo tree and export back into the repo if the live CRM was changed directly.
+
 ## What You Can Rebuild From This Repo
 
 Starting from a vanilla Docker-based EspoCRM install, this repo can restore:
