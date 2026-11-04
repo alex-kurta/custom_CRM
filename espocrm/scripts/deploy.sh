@@ -34,6 +34,8 @@ require_path "$REPO_ROOT/espocrm/client/custom"
 require_path "$REPO_ROOT/espocrm/patches/ClientManager.php"
 require_path "$REPO_ROOT/espocrm/config/config-overrides.php"
 require_path "$REPO_ROOT/espocrm/scripts/merge-config.php"
+require_path "$REPO_ROOT/espocrm/scripts/apply-schema.sh"
+require_path "$REPO_ROOT/espocrm/scripts/verify-schema.sh"
 require_path "$CUSTOM_DST"
 require_path "$CLIENT_DST"
 require_path "$STATE_FILE"
@@ -67,10 +69,16 @@ docker exec "$CONTAINER_NAME" php -l /var/www/html/data/state.php >/dev/null
 printf 'Rebuilding EspoCRM metadata...\n'
 docker exec --user www-data "$CONTAINER_NAME" php command.php rebuild >/dev/null
 
+printf 'Applying supplemental live-parity schema...\n'
+"$SCRIPT_DIR/apply-schema.sh"
+
 printf 'Restarting php-fpm container to clear opcode cache...\n'
 docker restart "$CONTAINER_NAME" >/dev/null
 
 printf 'Verifying custom scripts are referenced...\n'
 docker exec "$CONTAINER_NAME" grep -q 'past-due-highlight.js' /var/www/html/application/Espo/Core/Utils/ClientManager.php
+
+printf 'Verifying schema parity...\n'
+"$SCRIPT_DIR/verify-schema.sh"
 
 printf 'Deploy complete.\n'

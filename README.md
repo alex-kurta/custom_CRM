@@ -17,6 +17,7 @@ espocrm/
   client/custom/          contents of persistent/custom-client/
   patches/                patched ClientManager.php + minimal diff
   config/                 sanitized compose/config/nginx snippets
+  schema/                 supplemental SQL for exact live-schema parity
   cron/                   optional follow-up reminder cron entry
   scripts/                repo -> live deploy and live -> repo export
 ```
@@ -31,6 +32,7 @@ Starting from a vanilla Docker-based EspoCRM install, this repo can restore:
 - client-side custom JS/templates under `custom-client/`
 - the `ClientManager.php` modification that loads the 4 custom client scripts
 - safe non-secret config keys like `recordsPerPageSmall` and `maxEmailAccountCount`
+- supplemental SQL needed to match the current live custom schema exactly
 - the nginx upload-size tweak
 - the optional follow-up reminder cron entry
 
@@ -100,7 +102,9 @@ What `deploy.sh` does:
 - merges the safe keys from `espocrm/config/config-overrides.php` into `data/config.php`
 - bumps `appTimestamp` in `state.php`
 - runs `php command.php rebuild`
+- applies `espocrm/schema/live-parity.sql` for exact live-schema parity
 - restarts the `espocrm` container to clear opcode cache
+- verifies schema parity with `espocrm/scripts/verify-schema.sh`
 
 After that, hard-refresh the browser.
 
@@ -112,6 +116,7 @@ Minimum checks:
 docker exec espocrm grep -q 'past-due-highlight.js' /var/www/html/application/Espo/Core/Utils/ClientManager.php
 docker exec espocrm php -l /var/www/html/data/config.php
 docker exec espocrm php -l /var/www/html/data/state.php
+./espocrm/scripts/verify-schema.sh
 ```
 
 UI checks:
@@ -130,7 +135,8 @@ If someone downloads this repo onto a fresh host, the shortest path is:
 3. Run `docker compose up -d` in `/var/www/espocrm`.
 4. Add the nginx `client_max_body_size 50M;` tweak if missing.
 5. Run `./espocrm/scripts/deploy.sh` from the repo root.
-6. Log into EspoCRM and verify the custom UI and fields are present.
+6. Run `./espocrm/scripts/verify-schema.sh`.
+7. Log into EspoCRM and verify the custom UI and fields are present.
 
 That gets a vanilla Docker install patched to the current custom code state captured here.
 
@@ -179,6 +185,7 @@ The sync/import/categorization code depends on `.env` values. Keep `.env` local-
 - This repo is pinned to the current live behavior. If you switch to a materially newer EspoCRM image, re-test the `ClientManager.php` replacement.
 - `deploy.sh` targets `/var/www/espocrm` specifically.
 - `export-from-live.sh` should be run before committing if someone changed the live CRM through the UI or by editing live files directly.
+- Exact live-schema parity includes a small supplemental SQL layer in `espocrm/schema/live-parity.sql` for legacy columns that metadata rebuild alone does not describe.
 
 ## Exporting new live changes back into the repo
 
