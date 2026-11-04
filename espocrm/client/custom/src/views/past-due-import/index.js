@@ -2,12 +2,13 @@ define('custom:views/past-due-import/index', ['view'], function (Dep) {
 
     return Dep.extend({
 
-        template: 'past-due-import:index',
+        template: 'custom:past-due-import/index',
 
         events: {
             'change #import-file': 'onFileChange',
             'click #import-btn': 'onImport',
             'click #dry-run-btn': 'onDryRun',
+            'click #reset-btn': 'onReset',
         },
 
         data: function () {
@@ -15,16 +16,27 @@ define('custom:views/past-due-import/index', ['view'], function (Dep) {
                 error: this.error || null,
                 result: this.result || null,
                 importing: this.importing || false,
+                fileName: this.file ? this.file.name : '',
             };
+        },
+
+        afterRender: function () {
+            var hasFile = !!this.file;
+
+            this.$('#import-btn').prop('disabled', !hasFile || this.importing);
+            this.$('#dry-run-btn').prop('disabled', !hasFile || this.importing);
         },
 
         onFileChange: function (e) {
             var file = e.target.files[0];
-            if (file) {
-                this.file = file;
-                this.$('#import-btn').prop('disabled', false);
-                this.$('#dry-run-btn').prop('disabled', false);
-            }
+
+            this.file = file || null;
+            this.error = null;
+            this.result = null;
+
+            this.$('#import-file-name').text(this.file ? this.file.name : '');
+            this.$('#import-btn').prop('disabled', !this.file);
+            this.$('#dry-run-btn').prop('disabled', !this.file);
         },
 
         onImport: function () {
@@ -35,50 +47,56 @@ define('custom:views/past-due-import/index', ['view'], function (Dep) {
             this.doImport(true);
         },
 
-        doImport: function (dryRun) {
-            if (!this.file) return;
+        onReset: function () {
+            this.file = null;
+            this.error = null;
+            this.result = null;
+            this.importing = false;
+            this.reRender();
+        },
 
-            var self = this;
+        doImport: function (dryRun) {
+            if (!this.file || this.importing) {
+                return;
+            }
+
             this.importing = true;
             this.error = null;
             this.result = null;
             this.reRender();
 
-            var formData = new FormData();
-            formData.append('file', this.file);
-            formData.append('dryRun', dryRun ? '1' : '0');
+            var url = 'PastDueImport' +
+                '?fileName=' + encodeURIComponent(this.file.name) +
+                '&dryRun=' + (dryRun ? '1' : '0');
 
-            // Use Espo.Ajax or direct XHR to upload
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', 'api/v1/PastDueImport', true);
-            xhr.setRequestHeader('X-Api-Key', this.getMetadata().get('appKey') || '');
+            var self = this;
 
-            xhr.onload = function () {
+            Espo.Ajax.postRequest(url, null, {
+                contentType: 'application/octet-stream',
+                data: this.file,
+                timeout: 0,
+            }).then(function (data) {
                 self.importing = false;
-                if (xhr.status === 200) {
-                    try {
-                        var data = JSON.parse(xhr.responseText);
-                        if (data.error) {
-                            self.error = data.error;
-                        } else {
-                            self.result = data;
-                        }
-                    } catch (e) {
-                        self.error = 'Invalid response from server';
+                self.result = data;
+                self.reRender();
+                Espo.Ui.success(dryRun ? 'Dry run complete' : 'Import complete');
+            }).catch(function (xhr) {
+                var message = 'Import failed';
+
+                try {
+                    var body = JSON.parse(xhr.responseText);
+
+                    if (body && body.message) {
+                        message = body.message;
                     }
-                } else {
-                    self.error = 'Import failed: ' + xhr.status;
+                } catch (e) {
+                    // Keep the generic message.
                 }
-                self.reRender();
-            };
 
-            xhr.onerror = function () {
                 self.importing = false;
-                self.error = 'Network error';
+                self.error = message;
                 self.reRender();
-            };
-
-            xhr.send(formData);
+            });
         },
     });
 });

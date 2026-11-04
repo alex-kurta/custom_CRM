@@ -32,6 +32,8 @@ Starting from a vanilla Docker-based EspoCRM install, this repo can restore:
 - client-side custom JS/templates under `custom-client/`
 - the `ClientManager.php` modification that loads the 4 custom client scripts
 - safe non-secret config keys like `recordsPerPageSmall` and `maxEmailAccountCount`
+- the left navigation `tabList` (including the Past Due Import tab below Calendar)
+- the in-app Past Due Import page and its `POST /api/v1/PastDueImport` upload endpoint
 - supplemental SQL needed to match the current live custom schema exactly
 - the nginx upload-size tweak
 - the optional follow-up reminder cron entry
@@ -99,7 +101,7 @@ What `deploy.sh` does:
 - syncs `espocrm/server/custom/` into `/var/www/espocrm/data/espocrm/persistent/custom/`
 - syncs `espocrm/client/custom/` into `/var/www/espocrm/data/espocrm/persistent/custom-client/`
 - replaces `ClientManager.php` inside the running `espocrm` container so the 4 custom client scripts load
-- merges the safe keys from `espocrm/config/config-overrides.php` into `data/config.php`
+- merges the safe keys from `espocrm/config/config-overrides.php` into `data/config.php` (and overwrites `tabList` so the sidebar matches the repo)
 - bumps `appTimestamp` in `state.php`
 - runs `php command.php rebuild`
 - applies `espocrm/schema/live-parity.sql` for exact live-schema parity
@@ -125,6 +127,7 @@ UI checks:
 - custom Sales Order panel renders on Account detail
 - custom fields such as `cCategory`, `cPrePay`, and `cComments` exist
 - removed sidebar items stay removed
+- the `Past Due Import` tab is present below Calendar and its Dry Run returns a count
 
 ## Cold-Start Recovery Summary
 
@@ -168,14 +171,29 @@ crontab espocrm/cron/crontab.txt
 
 The sync/import/categorization code depends on `.env` values. Keep `.env` local-only.
 
+## Past Due Import (in-app)
+
+The CRM exposes a `Past Due Import` tab below Calendar. Upload the accounting `.xlsx` export there; the importer detects the report date from the filename, matches each sales order number to its Account, and writes the aggregated values back to `cPastDue`, `cDaysOverdue`, `cPastDueAmount`, `cPastDueAmountCurrency`, and `cPastDueData`.
+
+The importer clears existing past-due flags first and then re-applies the uploaded report, so each run is a full refresh. Use **Dry Run** to preview counts without writing.
+
+The underlying endpoint is `POST /api/v1/PastDueImport?fileName=<name>&dryRun=1`, with the raw `.xlsx` bytes as the request body and a valid `X-Api-Key`. It requires edit access to `Account`.
+
+This is a PHP port of the original Python importer, which is still available:
+
+```bash
+python3 -m src.past_due_import "past-due-invoices.xlsx" --dry-run
+```
+
 ## Notable EspoCRM customizations captured here
 
 - custom `CSalesOrder` and `CSalesOrderItem` entities and related controllers/metadata
 - Account custom fields such as `cCategory`, `cPrePay`, `cComments`, `cPastDue`, and follow-up fields
 - Account list behavior: row highlighting, click behavior, default sort persistence, panel tweaks
 - Sales order panel custom rendering, row expansion, filtering, and styling
-- sidebar/menu cleanup and record/layout overrides
-- safe config overrides: `clientCspDisabled`, `recordsPerPageSmall`, `maxEmailAccountCount`, `siteUrl`
+- sidebar/menu cleanup and record/layout overrides (left navigation comes from `tabList`, not `app.menu`)
+- in-app Past Due Import: sidebar tab below Calendar, `POST /api/v1/PastDueImport`, PHP `.xlsx` parser + Account updater
+- safe config overrides: `clientCspDisabled`, `recordsPerPageSmall`, `maxEmailAccountCount`, `siteUrl`, `tabList`
 
 ## Important constraints
 
@@ -185,6 +203,8 @@ The sync/import/categorization code depends on `.env` values. Keep `.env` local-
 - This repo is pinned to the current live behavior. If you switch to a materially newer EspoCRM image, re-test the `ClientManager.php` replacement.
 - `deploy.sh` targets `/var/www/espocrm` specifically.
 - `export-from-live.sh` should be run before committing if someone changed the live CRM through the UI or by editing live files directly.
+- `espocrm/config/config-overrides.php` owns the left navigation `tabList`; `deploy.sh` overwrites it, so sidebar changes made in the UI must be copied back into the repo to survive a deploy.
+- The in-app Past Due Import is a full refresh: it clears existing past-due flags before re-applying the uploaded report. Run Dry Run first.
 - Exact live-schema parity includes a small supplemental SQL layer in `espocrm/schema/live-parity.sql` for legacy columns that metadata rebuild alone does not describe.
 
 ## Exporting new live changes back into the repo

@@ -1,12 +1,15 @@
 <?php
 
-if ($argc !== 3) {
-    fwrite(STDERR, "Usage: php merge-config.php <live-config.php> <overrides.php>\n");
+if ($argc < 3 || $argc > 4) {
+    fwrite(STDERR, "Usage: php merge-config.php <live-config.php> <overrides.php> [overwrite-keys-csv]\n");
     exit(1);
 }
 
 $livePath = $argv[1];
 $overridePath = $argv[2];
+$overwriteKeys = $argc === 4
+    ? array_values(array_filter(array_map('trim', explode(',', $argv[3]))))
+    : [];
 
 if (!is_file($livePath) || !is_readable($livePath)) {
     fwrite(STDERR, "Live config not readable: {$livePath}\n");
@@ -34,9 +37,12 @@ if (!is_array($overrides)) {
 $added = [];
 
 foreach ($overrides as $key => $value) {
-    if (!array_key_exists($key, $live)) {
+    $exists = array_key_exists($key, $live);
+    $overwrite = in_array($key, $overwriteKeys, true);
+
+    if (!$exists || $overwrite) {
         $live[$key] = $value;
-        $added[] = $key;
+        $added[] = $exists ? "{$key} (overwritten)" : $key;
     }
 }
 

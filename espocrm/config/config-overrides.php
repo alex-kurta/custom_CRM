@@ -20,4 +20,35 @@ return [
 
     // Public URL of this instance
     'siteUrl' => 'https://crm.example.com',
+
+    // Left navigation tabs. Replaces the default core "Import" tab with a
+    // dedicated Past Due Import tab right below Calendar. deploy.sh overwrites
+    // this key on purpose (see merge-config.php overwrite list).
+    'tabList' => [
+        ['type' => 'divider', 'id' => '342567', 'text' => '$CRM'],
+        'Account',
+        ['type' => 'divider', 'text' => '$Activities', 'id' => '219419'],
+        'Email',
+        'Meeting',
+        'Call',
+        'Task',
+        'Calendar',
+        [
+            'type' => 'url',
+            'url' => '#PastDueImport',
+            'text' => 'Past Due Import',
+            'iconClass' => 'fas fa-file-import',
+            'onlyAdmin' => true,
+        ],
+        ['type' => 'divider', 'text' => null, 'id' => '137994'],
+        '_delimiter_',
+        ['type' => 'divider', 'text' => '$Marketing', 'id' => '463280'],
+        'Campaign',
+        'TargetList',
+        ['type' => 'divider', 'text' => '$Organization', 'id' => '566592'],
+        'User',
+        ['type' => 'divider', 'text' => null, 'id' => '898671'],
+        'EmailTemplate',
+        'Template',
+    ],
 ];

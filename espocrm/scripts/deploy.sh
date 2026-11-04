@@ -58,7 +58,7 @@ docker exec "$CONTAINER_NAME" php -l /var/www/html/application/Espo/Core/Utils/C
 printf 'Merging safe config overrides...\n'
 docker cp "$REPO_ROOT/espocrm/scripts/merge-config.php" "$CONTAINER_NAME:/tmp/merge-config.php"
 docker cp "$REPO_ROOT/espocrm/config/config-overrides.php" "$CONTAINER_NAME:/tmp/config-overrides.php"
-docker exec "$CONTAINER_NAME" php /tmp/merge-config.php /var/www/html/data/config.php /tmp/config-overrides.php
+docker exec "$CONTAINER_NAME" php /tmp/merge-config.php /var/www/html/data/config.php /tmp/config-overrides.php tabList
 docker exec "$CONTAINER_NAME" php -l /var/www/html/data/config.php >/dev/null
 
 printf 'Bumping appTimestamp...\n'
@@ -69,7 +69,6 @@ docker exec "$CONTAINER_NAME" php -l /var/www/html/data/state.php >/dev/null
 printf 'Rebuilding EspoCRM metadata...\n'
 docker exec --user www-data "$CONTAINER_NAME" php command.php rebuild >/dev/null
 
-printf 'Applying supplemental live-parity schema...\n'
 "$SCRIPT_DIR/apply-schema.sh"
 
 printf 'Restarting php-fpm container to clear opcode cache...\n'
