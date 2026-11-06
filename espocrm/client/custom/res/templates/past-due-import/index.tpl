@@ -44,10 +44,10 @@
             <div id="import-file-name" class="text-muted small" style="margin-top: 5px;">{{fileName}}</div>
         </div>
         <div class="form-group" style="margin-top: 15px;">
-            <button class="btn btn-primary" id="import-btn" disabled>
+            <button class="btn btn-primary" id="import-btn">
                 <span class="fas fa-upload"></span> Import
             </button>
-            <button class="btn btn-default" id="dry-run-btn" disabled>
+            <button class="btn btn-default" id="dry-run-btn">
                 <span class="fas fa-eye"></span> Dry Run
             </button>
         </div>

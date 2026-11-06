@@ -4,13 +4,6 @@ define('custom:views/past-due-import/index', ['view'], function (Dep) {
 
         template: 'custom:past-due-import/index',
 
-        events: {
-            'change #import-file': 'onFileChange',
-            'click #import-btn': 'onImport',
-            'click #dry-run-btn': 'onDryRun',
-            'click #reset-btn': 'onReset',
-        },
-
         data: function () {
             return {
                 error: this.error || null,
@@ -21,30 +14,67 @@ define('custom:views/past-due-import/index', ['view'], function (Dep) {
         },
 
         afterRender: function () {
-            var hasFile = !!this.file;
+            var self = this;
+            var input = this.$('#import-file').get(0);
 
-            this.$('#import-btn').prop('disabled', !hasFile || this.importing);
-            this.$('#dry-run-btn').prop('disabled', !hasFile || this.importing);
+            if (input) {
+                input.onchange = function () {
+                    self.onFileChange(input);
+                };
+            }
+
+            if (this.file) {
+                this.$('#import-file-name').text(this.file.name);
+            }
+
+            var importButton = this.$('#import-btn').get(0);
+
+            if (importButton) {
+                importButton.onclick = function () {
+                    self.doImport(false);
+                };
+            }
+
+            var dryRunButton = this.$('#dry-run-btn').get(0);
+
+            if (dryRunButton) {
+                dryRunButton.onclick = function () {
+                    self.doImport(true);
+                };
+            }
+
+            var resetButton = this.$('#reset-btn').get(0);
+
+            if (resetButton) {
+                resetButton.onclick = function () {
+                    self.onReset();
+                };
+            }
+
+            this.updateButtons();
         },
 
-        onFileChange: function (e) {
-            var file = e.target.files[0];
+        updateButtons: function () {
+            this.$('#import-btn').prop('disabled', !!this.importing);
+            this.$('#dry-run-btn').prop('disabled', !!this.importing);
+        },
 
-            this.file = file || null;
+        onFileChange: function (input) {
+            this.file = (input && input.files && input.files[0]) || null;
             this.error = null;
             this.result = null;
 
             this.$('#import-file-name').text(this.file ? this.file.name : '');
-            this.$('#import-btn').prop('disabled', !this.file);
-            this.$('#dry-run-btn').prop('disabled', !this.file);
         },
 
-        onImport: function () {
-            this.doImport(false);
-        },
+        getFile: function () {
+            var input = this.$('#import-file').get(0);
 
-        onDryRun: function () {
-            this.doImport(true);
+            if (input && input.files && input.files[0]) {
+                this.file = input.files[0];
+            }
+
+            return this.file || null;
         },
 
         onReset: function () {
@@ -56,7 +86,16 @@ define('custom:views/past-due-import/index', ['view'], function (Dep) {
         },
 
         doImport: function (dryRun) {
-            if (!this.file || this.importing) {
+            if (this.importing) {
+                return;
+            }
+
+            var file = this.getFile();
+
+            if (!file) {
+                this.error = 'Select an .xlsx file first.';
+                this.reRender();
+
                 return;
             }
 
@@ -66,14 +105,14 @@ define('custom:views/past-due-import/index', ['view'], function (Dep) {
             this.reRender();
 
             var url = 'PastDueImport' +
-                '?fileName=' + encodeURIComponent(this.file.name) +
+                '?fileName=' + encodeURIComponent(file.name) +
                 '&dryRun=' + (dryRun ? '1' : '0');
 
             var self = this;
 
             Espo.Ajax.postRequest(url, null, {
                 contentType: 'application/octet-stream',
-                data: this.file,
+                data: file,
                 timeout: 0,
             }).then(function (data) {
                 self.importing = false;
