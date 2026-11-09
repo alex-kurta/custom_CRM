@@ -1,5 +1,14 @@
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
 # Daily follow-up reminder emails (8 AM server time).
 # Update the repo path below before installing if this checkout is not at
 # /path/to/project.
 # Install with:  crontab espocrm/cron/crontab.txt
 0 8 * * * cd /path/to/project && /usr/bin/python3 -m src.followup_reminders >> logs/followup-reminders.log 2>&1
+
+# Daily logical DB dump + full application archive, with retention (2:30 AM).
+30 2 * * * /path/to/project/espocrm/scripts/backup.sh >> /var/log/espocrm-backup.log 2>&1
+
+# Restore container-only config (ClientManager patch, php-fpm tuning) if the
+# container was recreated. No-op when everything already matches.
+*/10 * * * * /path/to/project/espocrm/scripts/restore-container-config.sh >> /path/to/project/logs/container-config.log 2>&1

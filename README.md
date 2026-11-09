@@ -143,6 +143,42 @@ If someone downloads this repo onto a fresh host, the shortest path is:
 
 That gets a vanilla Docker install patched to the current custom code state captured here.
 
+## Persistence, Backups & Power-Loss Recovery
+
+Live state lives on the host filesystem under `/var/www/espocrm/data` (bind mounts), not inside containers:
+
+| Path | Contents |
+|---|---|
+| `data/mariadb/data` | MariaDB data directory |
+| `data/espocrm/persistent/data` | EspoCRM `data/` (config.php, state.php, uploads) |
+| `data/espocrm/persistent/custom` | deployed server-side custom code |
+| `data/espocrm/persistent/custom-client` | deployed client-side custom code |
+| `data/nginx` | nginx configs and logs |
+
+All services use `restart: always`, and Docker is enabled at boot, so a reboot or power loss restarts the stack automatically. MariaDB runs with `innodb_flush_log_at_trx_commit=1`, so committed transactions survive an unclean shutdown.
+
+Two changes live in the container layer, not on a bind mount: the `ClientManager.php` patch and the php-fpm `pm.max_children` tuning. `espocrm/scripts/restore-container-config.sh` re-applies both and is installed in cron every 10 minutes, so a recreated container heals itself without a manual deploy.
+
+Backups run daily at 02:30 via `espocrm/scripts/backup.sh` (installed by `espocrm/cron/crontab.txt`):
+
+- `/var/www/espocrm-backup/sql/db-<timestamp>.sql.gz` — consistent `mariadb-dump --single-transaction` of all databases (kept 30 days)
+- `/var/www/espocrm-backup/<timestamp>.tar.gz` — full `/var/www/espocrm` archive via `command.sh backup` (kept 14 days)
+
+Restore the logical database dump into the running DB container:
+
+```bash
+gunzip -c /var/www/espocrm-backup/sql/db-<timestamp>.sql.gz \
+  | docker exec -i espocrm-db sh -lc 'exec mariadb -uroot -p"$MARIADB_ROOT_PASSWORD"'
+```
+
+Restore the full application archive:
+
+```bash
+/var/www/espocrm/command.sh restore /var/www/espocrm-backup/<timestamp>.tar.gz
+```
+
+A hypervisor-level power loss is best covered by a UPS. These backups cover disk failure, bad upgrades, and operator mistakes, not a dead host.
+
 ## Fishbowl integration quick start
 
 ```bash
@@ -199,7 +235,7 @@ python3 -m src.past_due_import "past-due-invoices.xlsx" --dry-run
 
 - Never commit `.env`.
 - Never commit live `data/config.php` or the real `/var/www/espocrm/docker-compose.yml`; this repo stores sanitized equivalents only.
-- `ClientManager.php` is not on a Docker volume. Recreating the `espocrm` container loses that change until `deploy.sh` is run again.
+- `ClientManager.php` and the php-fpm tuning are not on a Docker volume. `restore-container-config.sh` (cron, every 10 minutes) re-applies them after a container recreate; `deploy.sh` also restores the patch.
 - This repo is pinned to the current live behavior. If you switch to a materially newer EspoCRM image, re-test the `ClientManager.php` replacement.
 - `deploy.sh` targets `/var/www/espocrm` specifically.
 - `export-from-live.sh` should be run before committing if someone changed the live CRM through the UI or by editing live files directly.
