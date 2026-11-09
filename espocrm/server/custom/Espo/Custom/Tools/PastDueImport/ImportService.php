@@ -32,6 +32,32 @@ class ImportService
         'dec' => 12,
     ];
 
+    private const NAME_SUFFIXES = [
+        'ltd',
+        'limited',
+        'inc',
+        'incorporated',
+        'llc',
+        'llp',
+        'lp',
+        'corp',
+        'corporation',
+        'co',
+        'company',
+        'plc',
+        'gmbh',
+        'sa',
+        'sas',
+        'ag',
+        'bv',
+        'nv',
+        'pty',
+        'pte',
+        'kk',
+        'srl',
+        'school',
+    ];
+
     private const DATE_PATTERNS = [
         '/\b(\d{1,2})\s*(?:st|nd|rd|th)?\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s*,?\s*(\d{4})\b/i',
         '/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+(\d{1,2})\s*(?:st|nd|rd|th)?\s*,?\s*(\d{4})\b/i',
@@ -233,26 +259,76 @@ class ImportService
             return $this->accountNameCache[$name];
         }
 
-        $accounts = $this->entityManager
-            ->getRepository('Account')
-            ->where(['name*' => '%' . $name . '%'])
-            ->limit(0, 5)
-            ->find();
+        return $this->accountNameCache[$name] = $this->findAccountIdByName($name);
+    }
 
-        $accountId = null;
+    private function findAccountIdByName(string $name): ?string
+    {
+        $normalized = $this->normalizeName($name);
+        $variants = [$name];
 
-        foreach ($accounts as $account) {
-            if (strcasecmp((string) $account->get('name'), $name) === 0) {
-                $accountId = $account->getId();
-                break;
+        if ($normalized !== '' && strcasecmp($normalized, trim($name)) !== 0) {
+            $variants[] = $normalized;
+        }
+
+        $firstResult = null;
+
+        foreach ($variants as $index => $variant) {
+            $accounts = $this->entityManager
+                ->getRepository('Account')
+                ->where(['name*' => '%' . $variant . '%'])
+                ->limit(0, 5)
+                ->find();
+
+            foreach ($accounts as $account) {
+                $candidate = (string) $account->get('name');
+
+                if (
+                    strcasecmp($candidate, $name) === 0 ||
+                    ($normalized !== '' && $this->normalizeName($candidate) === $normalized)
+                ) {
+                    return $account->getId();
+                }
+
+                if ($index === 0) {
+                    $firstResult ??= $account->getId();
+                }
             }
         }
 
-        if (!$accountId && count($accounts)) {
-            $accountId = $accounts[0]->getId();
+        return $firstResult;
+    }
+
+    /**
+     * Normalizes a company name for tolerant matching: lowercase, drop
+     * punctuation, parenthetical content, a leading "the", and trailing
+     * legal/entity suffixes (e.g. "Ltd.", "Inc.", "-school").
+     */
+    private function normalizeName(string $name): string
+    {
+        $name = mb_strtolower(trim($name), 'UTF-8');
+
+        if ($name === '') {
+            return '';
         }
 
-        return $this->accountNameCache[$name] = $accountId;
+        $name = preg_replace('/\([^)]*\)/u', ' ', $name) ?? $name;
+        $name = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $name) ?? $name;
+
+        $words = array_values(array_filter(
+            explode(' ', $name),
+            static fn (string $word): bool => $word !== ''
+        ));
+
+        if (count($words) > 1 && $words[0] === 'the') {
+            array_shift($words);
+        }
+
+        while (count($words) > 1 && in_array(end($words), self::NAME_SUFFIXES, true)) {
+            array_pop($words);
+        }
+
+        return implode(' ', $words);
     }
 
     private function clearPastDue(bool $dryRun): int
