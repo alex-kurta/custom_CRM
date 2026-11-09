@@ -15,7 +15,7 @@ define('custom:views/past-due-import/index', ['view'], function (Dep) {
 
         afterRender: function () {
             var self = this;
-            var input = this.$('#import-file').get(0);
+            var input = this.$el.find('#import-file').get(0);
 
             if (input) {
                 input.onchange = function () {
@@ -24,10 +24,10 @@ define('custom:views/past-due-import/index', ['view'], function (Dep) {
             }
 
             if (this.file) {
-                this.$('#import-file-name').text(this.file.name);
+                this.$el.find('#import-file-name').text(this.file.name);
             }
 
-            var importButton = this.$('#import-btn').get(0);
+            var importButton = this.$el.find('#import-btn').get(0);
 
             if (importButton) {
                 importButton.onclick = function () {
@@ -35,7 +35,7 @@ define('custom:views/past-due-import/index', ['view'], function (Dep) {
                 };
             }
 
-            var dryRunButton = this.$('#dry-run-btn').get(0);
+            var dryRunButton = this.$el.find('#dry-run-btn').get(0);
 
             if (dryRunButton) {
                 dryRunButton.onclick = function () {
@@ -43,7 +43,7 @@ define('custom:views/past-due-import/index', ['view'], function (Dep) {
                 };
             }
 
-            var resetButton = this.$('#reset-btn').get(0);
+            var resetButton = this.$el.find('#reset-btn').get(0);
 
             if (resetButton) {
                 resetButton.onclick = function () {
@@ -55,8 +55,8 @@ define('custom:views/past-due-import/index', ['view'], function (Dep) {
         },
 
         updateButtons: function () {
-            this.$('#import-btn').prop('disabled', !!this.importing);
-            this.$('#dry-run-btn').prop('disabled', !!this.importing);
+            this.$el.find('#import-btn').prop('disabled', !!this.importing);
+            this.$el.find('#dry-run-btn').prop('disabled', !!this.importing);
         },
 
         onFileChange: function (input) {
@@ -64,11 +64,11 @@ define('custom:views/past-due-import/index', ['view'], function (Dep) {
             this.error = null;
             this.result = null;
 
-            this.$('#import-file-name').text(this.file ? this.file.name : '');
+            this.$el.find('#import-file-name').text(this.file ? this.file.name : '');
         },
 
         getFile: function () {
-            var input = this.$('#import-file').get(0);
+            var input = this.$el.find('#import-file').get(0);
 
             if (input && input.files && input.files[0]) {
                 this.file = input.files[0];
