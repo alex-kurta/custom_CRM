@@ -25,12 +25,16 @@ from typing import Any
 
 from src.config import sync as sync_cfg, has_fishbowl_config, has_espo_config
 from src.fishbowl.client import fetch_all, fetch_one
-from src.espocrm.client import upsert_entity
+from src.espocrm.client import list_entities, upsert_entity
 from src.espocrm.mapper import customer_to_account, part_to_product
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"
 LAST_SYNC_PATH = DATA_DIR / "lastSyncAt.txt"
+ENTITY_STATE_PATHS = {
+    "customer": DATA_DIR / "lastSyncAt.customer.txt",
+    "product": DATA_DIR / "lastSyncAt.product.txt",
+}
 LOGS_DIR = ROOT / "logs"
 MAP_PATH = DATA_DIR / "map.json"
 
@@ -49,6 +53,43 @@ def _read_last_sync() -> str | None:
 def _write_last_sync(ts: str):
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     LAST_SYNC_PATH.write_text(ts + "\n", encoding="utf-8")
+
+
+def _read_entity_last_sync(entity: str) -> str | None:
+    path = ENTITY_STATE_PATHS.get(entity)
+    if path and path.exists():
+        try:
+            txt = path.read_text(encoding="utf-8").strip()
+            if txt:
+                return txt
+        except Exception:
+            pass
+    return _read_last_sync()
+
+
+def _write_entity_last_sync(entity: str, ts: str):
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    (ENTITY_STATE_PATHS.get(entity) or LAST_SYNC_PATH).write_text(ts + "\n", encoding="utf-8")
+
+
+def _max_modified(rows: list[dict]) -> str | None:
+    values = []
+    for row in rows:
+        value = row.get("dateLastModified") or row.get("dateModified")
+        if value:
+            values.append(str(value))
+    return max(values) if values else None
+
+
+def _product_scope_available() -> bool:
+    try:
+        list_entities("Product", {"maxSize": 1, "select": "id"})
+        return True
+    except Exception as e:
+        status = getattr(getattr(e, "response", None), "status_code", None)
+        if status in (403, 404):
+            return False
+        raise
 
 
 def _load_map() -> dict:
@@ -119,7 +160,7 @@ def _delta_or_full(
         return []
 
 
-def _sync_customers(last_sync: str | None, args, id_map: dict, stats: dict) -> None:
+def _sync_customers(last_sync: str | None, args, id_map: dict, stats: dict) -> str | None:
     batch = sync_cfg.batch_size
     # Probe if dateLastModified exists via schema cache or try delta
     rows = _delta_or_full("customer", "dateLastModified", last_sync, "id", batch)
@@ -167,9 +208,10 @@ def _sync_customers(last_sync: str | None, args, id_map: dict, stats: dict) -> N
             skipped += 1
     stats["Account"] = {"found": len(rows), "created": created, "updated": updated, "skipped": skipped}
     print(f"[Account] found {len(rows)} → created {created} updated {updated} skipped {skipped}")
+    return _max_modified(rows)
 
 
-def _sync_products(last_sync: str | None, args, id_map: dict, stats: dict) -> None:
+def _sync_products(last_sync: str | None, args, id_map: dict, stats: dict) -> str | None:
     batch = sync_cfg.batch_size
     rows = _delta_or_full("part", "dateLastModified", last_sync, "id", batch)
     if not rows and last_sync:
@@ -206,6 +248,7 @@ def _sync_products(last_sync: str | None, args, id_map: dict, stats: dict) -> No
             skipped += 1
     stats["Product"] = {"found": len(rows), "created": created, "updated": updated, "skipped": skipped}
     print(f"[Product] found {len(rows)} → created {created} updated {updated} skipped {skipped}")
+    return _max_modified(rows)
 
 
 def main() -> int:
@@ -213,10 +256,19 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="preview without writes; does not update lastSyncAt")
     parser.add_argument("--force-full", action="store_true", help="ignore lastSyncAt and do full scan batch")
     parser.add_argument("--since", type=str, default=None, help="override lastSyncAt timestamp (e.g., '2024-01-01 00:00:00')")
+    parser.add_argument(
+        "--entity",
+        choices=["all", "customer", "product"],
+        default="all",
+        help="sync only one entity (default: all; products are skipped if the Product entity is absent)",
+    )
     args = parser.parse_args()
 
     print("=== Fishbowl ↔ EspoCRM Incremental Sync ===")
-    print(f"{datetime.now(timezone.utc).isoformat()}  dryRun={args.dry_run} forceFull={args.force_full} since={args.since}")
+    print(
+        f"{datetime.now(timezone.utc).isoformat()}  dryRun={args.dry_run} "
+        f"forceFull={args.force_full} since={args.since} entity={args.entity}"
+    )
 
     if not has_fishbowl_config():
         print("ERROR: FISHBOWL_DB_* incomplete — set .env")
@@ -225,33 +277,59 @@ def main() -> int:
         print("ERROR: ESPOCRM_API_KEY missing — cannot write without --dry-run")
         return 1
 
-    last_sync = args.since or _read_last_sync()
-    if args.force_full:
-        last_sync = None
+    entity = args.entity
 
-    if last_sync:
-        print(f"[State] lastSyncAt: {last_sync}")
-        # Validate parsable
-        if not _parse_ts(last_sync):
-            print(f"[State] lastSyncAt unparsable, will try as-is; consider resetting data/lastSyncAt.txt")
-    else:
-        print("[State] lastSyncAt: (none) — first run will do full scan batch")
+    last_sync_customer = args.since or _read_entity_last_sync("customer")
+    last_sync_product = args.since or _read_entity_last_sync("product")
+
+    if args.force_full:
+        last_sync_customer = None
+        last_sync_product = None
+
+    for label, value in (("customer", last_sync_customer), ("product", last_sync_product)):
+        if entity not in ("all", label):
+            continue
+
+        if value:
+            print(f"[State] {label} lastSyncAt: {value}")
+            if not _parse_ts(value):
+                print(f"[State] {label} lastSyncAt unparsable, will try as-is")
+        else:
+            print(f"[State] {label} lastSyncAt: (none) — first run will do full scan batch")
 
     print(f"[Config] batchSize={sync_cfg.batch_size} interval={sync_cfg.interval_minutes}min")
+
+    run_products = entity in ("all", "product")
+
+    if run_products and not args.dry_run and not _product_scope_available():
+        print("[Product] entity not available in EspoCRM — skipping product sync")
+        run_products = False
 
     id_map = _load_map()
     stats: dict[str, Any] = {}
 
-    # Sync each entity
-    _sync_customers(last_sync, args, id_map, stats)
-    _sync_products(last_sync, args, id_map, stats)
+    customer_state = None
+    product_state = None
 
-    # Persist map + lastSyncAt on success (only if not dry-run)
+    if entity in ("all", "customer"):
+        customer_state = _sync_customers(last_sync_customer, args, id_map, stats)
+
+    if run_products:
+        product_state = _sync_products(last_sync_product, args, id_map, stats)
+
     if not args.dry_run:
         _save_map(id_map)
-        now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-        _write_last_sync(now_iso)
-        print(f"[State] updated lastSyncAt → {now_iso}")
+
+        if customer_state:
+            _write_entity_last_sync("customer", customer_state)
+            print(f"[State] customer lastSyncAt → {customer_state}")
+
+        if product_state:
+            _write_entity_last_sync("product", product_state)
+            print(f"[State] product lastSyncAt → {product_state}")
+
+        if not customer_state and not product_state:
+            print("[State] no changes; lastSyncAt unchanged")
     else:
         print("[State] dry-run — lastSyncAt NOT updated")
 
@@ -263,7 +341,11 @@ def main() -> int:
     try:
         LOGS_DIR.mkdir(parents=True, exist_ok=True)
         with open(LOGS_DIR / "sync.log", "a", encoding="utf-8") as log:
-            log.write(f"{datetime.now(timezone.utc).isoformat()} sync dryRun={args.dry_run} lastSync={last_sync} stats={json.dumps(stats)}\n")
+            log.write(
+                f"{datetime.now(timezone.utc).isoformat()} sync entity={entity} "
+                f"dryRun={args.dry_run} customerState={customer_state} "
+                f"productState={product_state} stats={json.dumps(stats)}\n"
+            )
     except Exception:
         pass
 

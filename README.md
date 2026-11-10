@@ -198,12 +198,14 @@ Common commands:
 .venv/bin/python -m src.categorize --stats
 ```
 
-Optional cron for follow-up reminders:
+Install the cron jobs (follow-up reminders, daily backups, container-config restore, and the 30-minute Fishbowl sync):
 
 ```bash
-# edit the path inside espocrm/cron/crontab.txt if this repo lives elsewhere
+# edit the repo path inside espocrm/cron/crontab.txt if this checkout lives elsewhere
 crontab espocrm/cron/crontab.txt
 ```
+
+The 30-minute sync runs `--entity customer` because the Product entity is not installed in this CRM. `.venv/bin/python -m src.sync --dry-run` previews changes, and `--entity product` can be used if Products are enabled later.
 
 The sync/import/categorization code depends on `.env` values. Keep `.env` local-only.
 

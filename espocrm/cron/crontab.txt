@@ -12,3 +12,8 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # Restore container-only config (ClientManager patch, php-fpm tuning) if the
 # container was recreated. No-op when everything already matches.
 */10 * * * * /path/to/project/espocrm/scripts/restore-container-config.sh >> /path/to/project/logs/container-config.log 2>&1
+
+# Fishbowl → EspoCRM incremental sync every 30 minutes. Only customers are
+# synced: the Product entity is not installed in this CRM. flock prevents
+# overlapping runs if one takes longer than the interval.
+*/30 * * * * cd /path/to/project && flock -n /tmp/fishbowl-sync.lock .venv/bin/python -m src.sync --entity customer >> logs/sync.log 2>&1
