@@ -39,3 +39,8 @@ Thumbs.db
 /list-layout.json
 /espo-orange-colors.txt
 /*.xlsx
+
+# Local credentials/config
+.ghtoken
+opencode.json
+data/*.txt
