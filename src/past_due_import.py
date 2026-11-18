@@ -3,7 +3,7 @@
 Past-Due Excel Import — parses accounting Excel files and updates EspoCRM Accounts.
 
 Usage:
-  python3 -m src.past_due_import /path/to/"past-due-invoices.xlsx"
+  python3 -m src.past_due_import /path/to/past-due-invoices.xlsx
   python3 -m src.past_due_import /path/to/file.xlsx --dry-run
 """
 
@@ -44,7 +44,7 @@ MONTHS = {
 
 
 def parse_filename_date(filename: str) -> str | None:
-    """Extract YYYY-MM-DD from filename like 'past-due-invoices.xlsx'"""
+    """Extract YYYY-MM-DD from a filename like 'Past due invoices January 1, 2025.xlsx'."""
     if not filename:
         return None
     for pattern in DATE_PATTERNS:

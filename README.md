@@ -198,6 +198,8 @@ Common commands:
 .venv/bin/python -m src.categorize --stats
 ```
 
+The OSINT categorizer is generic code. Its supplier/competitor domains, category keywords, and name rules are business-specific and must live in a local `data/categorize-config.json` (gitignored). Set `CATEGORIZE_CONFIG` to use a different path.
+
 Install the cron jobs (follow-up reminders, daily backups, container-config restore, and the 30-minute Fishbowl sync):
 
 ```bash

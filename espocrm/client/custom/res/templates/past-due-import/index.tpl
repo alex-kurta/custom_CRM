@@ -2,7 +2,7 @@
     <h3>Past Due Import</h3>
     <p class="text-muted">
         Upload the accounting past-due Excel file (.xlsx). The report date is read
-        from the file name, e.g. "past-due-invoices.xlsx".
+        from the file name, e.g. "Past due invoices January 1, 2025.xlsx".
     </p>
 
     {{#if error}}

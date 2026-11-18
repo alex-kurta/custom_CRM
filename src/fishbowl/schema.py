@@ -1,6 +1,7 @@
 """
-Fishbowl schema discovery — caches to data/schema-cache.json & data/schema.json
+Fishbowl schema discovery — caches locally to data/schema-cache.json
 No PII: only table names, row counts, column metadata (field/type/null/key).
+The cache is intentionally gitignored; do not commit it.
 """
 
 from __future__ import annotations
@@ -16,7 +17,6 @@ from src.fishbowl.client import fetch_all, fetch_one
 ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = ROOT / "data"
 CACHE_PATH = DATA_DIR / "schema-cache.json"
-LEGACY_PATH = ROOT / "src" / "fishbowl" / "schema.json"
 
 # Key tables to probe for counts/columns (AGENTS.md §3) — order matters for logging
 KEY_TABLES = [
@@ -102,11 +102,6 @@ def discover() -> dict[str, Any]:
         DATA_DIR.mkdir(parents=True, exist_ok=True)
         with open(CACHE_PATH, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, default=str)
-        # Also mirror to src/fishbowl/schema.json for AGENT convention
-        legacy_dir = LEGACY_PATH.parent
-        legacy_dir.mkdir(parents=True, exist_ok=True)
-        with open(LEGACY_PATH, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, default=str)
     except Exception as e:
         errors.append(f"cache write: {e}")
 
@@ -114,11 +109,10 @@ def discover() -> dict[str, Any]:
 
 
 def load_cache() -> dict[str, Any] | None:
-    for p in (CACHE_PATH, LEGACY_PATH):
-        if p.exists():
-            try:
-                with open(p, encoding="utf-8") as f:
-                    return json.load(f)
-            except Exception:
-                continue
+    if CACHE_PATH.exists():
+        try:
+            with open(CACHE_PATH, encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return None
     return None

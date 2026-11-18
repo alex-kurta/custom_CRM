@@ -10,6 +10,7 @@ Env schema (see .env.example):
     FISHBOWL_DB_HOST / PORT / NAME / USER / PASSWORD / SSL
     ESPOCRM_API_URL / ESPOCRM_API_KEY / ESPOCRM_ADMIN_USERNAME / PASSWORD
     SYNC_INTERVAL_MINUTES / SYNC_BATCH_SIZE
+    RANK_EXCLUDE_PRODUCT_NUMS / RANK_EXCLUDE_DESCRIPTIONS
 """
 
 import os
@@ -40,6 +41,10 @@ def _required(name: str) -> str:
     if not v:
         raise RuntimeError(f"Missing required env var: {name}")
     return v
+
+
+def _split(name: str, separator: str) -> list[str]:
+    return [item.strip() for item in _optional(name, "").split(separator) if item.strip()]
 
 
 @dataclass(frozen=True)
@@ -112,9 +117,21 @@ class _SyncConfig:
         return "--dry-run" in sys.argv
 
 
+@dataclass(frozen=True)
+class _RankConfig:
+    @property
+    def exclude_product_nums(self) -> list[str]:
+        return _split("RANK_EXCLUDE_PRODUCT_NUMS", ",")
+
+    @property
+    def exclude_descriptions(self) -> list[str]:
+        return _split("RANK_EXCLUDE_DESCRIPTIONS", "|")
+
+
 fishbowl = _FishbowlConfig()
 espocrm = _EspoConfig()
 sync = _SyncConfig()
+rank = _RankConfig()
 
 
 def has_fishbowl_config() -> bool:
